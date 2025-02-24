@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Apple-specific meta tags for home screen -->
+<!-- Enable full-screen mode for iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Set the status bar color -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<!-- Link to the JSON application  -->
+<link rel="launcher" href="launcher.json">
+
+<!-- Title of the app -->
+<title>Weather App</title>
+
+<!-- Favicon (used in browsers and home screens) -->
+<link rel="icon" type="image/x-icon" href="images/favicon.ico">
+
+<!-- Apple Touch Icons (used when added to the home screen on iOS devices) -->
+<link rel="apple-touch-icon" href="images/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/apple-touch-icon-152x152.png">
+
+<!-- Link to Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+</head>
+<body class="bg-dark text-white">
+    <!-- Main Container -->
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <!-- Card for Weather App -->
+        <div class="card bg-secondary shadow-lg rounded-4 p-3" style="max-width: 400px; width: 100%;">
+            <div class="card-body">
+                <!-- App Title and Description -->
+                <h2 class="text-center text-light mb-3"> Your Weather App</h2>
+                <!-- Weather Image - Enlarged for better visibility -->
+                <div class="d-flex justify-content-center mb-3">
+                    <img src="weather image final.jpg" alt="Weather Image" style="max-width: 30%;"> 
+                </div>
+                <!-- App Subtitle -->
+                <h4 class="text-center text-muted mb-4">Check the weather fast!</h4>
+
+                <!-- City Input Field -->
+                <input type="text" id="cityInput" class="form-control mb-3" placeholder="Type a city name" aria-label="Type a city name">
+
+                <!-- Location Dropdown for Selecting City -->
+                <select id="cboLocation" class="form-select mb-3">
+                    <option value="">Choose Your Location</option>
+                </select>
+
+                <!-- Button to Fetch Weather for Selected Location -->
+                <button class="btn btn-primary w-100 mb-3" type="button" id="btnLocation">
+                    <i class="bi bi-cloud-sun-fill"></i> Get Weather!
+                </button>
+
+                <!-- Loading Spinner to Indicate Data Fetching -->
+                <div class="text-center" id="loadingSpinner" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                <!-- Weather Information Display Area -->
+                <div class="mt-4" id="weatherInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get HTML Elements
+        const cityInput = document.getElementById('cityInput');
+        const cboLocation = document.getElementById('cboLocation');
+        const btnLocation = document.getElementById('btnLocation');
+        const weatherInfo = document.getElementById('weatherInfo');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        // Event Listener for City Input Field (Search by City Name)
+        cityInput.addEventListener('input', () => {
+            const query = cityInput.value;
+
+            // If the user types more than 2 characters, start fetching city data
+            if (query.length > 2) {
+                fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const cities = data.results || [];
+                        cboLocation.innerHTML = '<option value="">Choose Your Location</option>';
+
+                        // Populate location dropdown with city options
+                        cities.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = `${city.latitude},${city.longitude}`;
+                            option.textContent = `${city.name}, ${city.country}`;
+                            cboLocation.appendChild(option);
+                        });
+                    })
+                    .catch(() => alert('Error retrieving city data. Please try again later.'));
+            }
+        });
+
+        // Event Listener for "Get Weather" Button
+        btnLocation.addEventListener('click', () => {
+            const location = cboLocation.value;
+
+            // If location is selected, fetch the weather data
+            if (location) {
+                const [latitude, longitude] = location.split(',');
+                loadingSpinner.style.display = 'block'; // Show loading spinner
+                weatherInfo.innerHTML = ''; // Clear any previous weather data
+
+                // Fetch weather data for selected location
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=relativehumidity_2m,precipitation`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loadingSpinner.style.display = 'none'; // Hide loading spinner
+                        const weather = data.current_weather;
+                        const hourly = data.hourly;
+
+                        // Extract most recent precipitation and humidity data
+                        const precipitation = hourly.precipitation[0] || '0';
+                        const humidity = hourly.relativehumidity_2m[0] || 'N/A';
+
+                        let weatherIcon = '';
+                        let weatherCondition = '';
+
+                        // Determine the weather condition and corresponding icon
+                        if (weather.weathercode === 0) {
+                            weatherIcon = '<i class="bi bi-brightness-high text-warning fs-1"></i>';
+                            weatherCondition = 'Clear Sky';
+                        } else if (weather.weathercode >= 1 && weather.weathercode <= 3) {
+                            weatherIcon = '<i class="bi bi-cloud-sun text-light fs-1"></i>';
+                            weatherCondition = 'Partly Cloudy';
+                        } else if (weather.weathercode >= 61 && weather.weathercode <= 65) {
+                            weatherIcon = '<i class="bi bi-cloud-rain text-info fs-1"></i>';
+                            weatherCondition = 'Rainy';
+                        } else {
+                            weatherIcon = '<i class="bi bi-question-circle text-light fs-1"></i>';
+                            weatherCondition = 'Unknown';
+                        }
+
+                        // Update the weather information display
+                        weatherInfo.innerHTML = `
+                            <h4 class="text-center text-info mb-3">Current Weather</h4>
+                            <div class="text-center mb-3">${weatherIcon}</div>
+                            <h4 class="text-center text-light">${weatherCondition}</h4>
+                            <div class="d-flex justify-content-around fs-4">
+                                <div><i class="bi bi-thermometer-half text-danger"></i> ${weather.temperature}°C</div>
+                                <div><i class="bi bi-wind text-light"></i> ${weather.windspeed} km/h</div>
+                            </div>
+                            <div class="d-flex justify-content-around fs-4 mt-2">
+                                <div><i class="bi bi-droplet text-info"></i> ${humidity} %</div>
+                                <div><i class="bi bi-cloud-rain text-primary"></i> ${precipitation} mm</div>
+                            </div>
+                        `;
+                    })
+                    .catch(() => {
+                        loadingSpinner.style.display = 'none'; // Hide loading spinner on error
+                        alert('Error retrieving weather data. Please try again later.');
+                    });
+            }
+        });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+              .then((registration) => {
+                console.log('Service Worker registered with scope:', registration.scope);
+              })
+              .catch((error) => {
+                console.log('Service Worker registration failed:', error);
+              });
+          });
+        }
+      </script>
+      
+</body>
+</html>
+
