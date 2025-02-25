@@ -33,7 +33,7 @@
 </head>
 <body class="bg-dark text-white">
     <!-- Main Container -->
-    <div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
         <!-- Card for Weather App -->
         <div class="card bg-secondary shadow-lg rounded-4 p-3" style="max-width: 400px; width: 100%;">
             <div class="card-body">
@@ -44,7 +44,7 @@
                     <img src="weather image final.jpg" alt="Weather Image" style="max-width: 30%;"> 
                 </div>
                 <!-- App Subtitle -->
-                <h4 class="text-center text-muted mb-4">Check the weather fast!</h4>
+                <h4 class="text-center text-light mb-4">Check the weather fast!</h4>
 
                 <!-- City Input Field -->
                 <input type="text" id="cityInput" class="form-control mb-3" placeholder="Type a city name" aria-label="Type a city name">
@@ -146,21 +146,23 @@
 
                         // Update the weather information display
                         weatherInfo.innerHTML = `
-                            <h4 class="text-center text-info mb-3">Current Weather</h4>
-                            <div class="text-center mb-3">${weatherIcon}</div>
-                            <h4 class="text-center text-light">${weatherCondition}</h4>
-                            <div class="d-flex justify-content-around fs-4">
-                                <div><i class="bi bi-thermometer-half text-danger"></i> ${weather.temperature}°C</div>
-                                <div><i class="bi bi-wind text-light"></i> ${weather.windspeed} km/h</div>
-                            </div>
-                            <div class="d-flex justify-content-around fs-4 mt-2">
-                                <div><i class="bi bi-droplet text-info"></i> ${humidity} %</div>
-                                <div><i class="bi bi-cloud-rain text-primary"></i> ${precipitation} mm</div>
-                            </div>
-                        `;
+                        <h4 class="text-center text-info mb-3">Current Weather</h4>
+                        <div class="text-center mb-3">${weatherIcon}</div>
+                        <h4 class="text-center text-light">${weatherCondition}</h4>
+                        <div class="d-flex justify-content-around fs-4">
+                        <div><i class="bi bi-thermometer-half text-danger"></i> <span style="color: white;">${weather.temperature}°C</span></div>
+                        <div><i class="bi bi-wind text-light"></i> <span style="color: white;">${weather.windspeed} km/h</span></div>
+                        </div>
+                        <div class="d-flex justify-content-around fs-4 mt-2">
+                        <div><i class="bi bi-droplet text-info"></i> <span style="color: white;">${humidity} %</span></div>
+                        <div><i class="bi bi-cloud-rain text-primary"></i> <span style="color: white;">${precipitation} mm</span></div>
+                        </div>
+`                          ;
+
                     })
                     .catch(() => {
-                        loadingSpinner.style.display = 'none'; // Hide loading spinner on error
+                        loadingSpinner.style.display = 'none'; 
+                        // Hide loading spinner on error
                         alert('Error retrieving weather data. Please try again later.');
                     });
             }
